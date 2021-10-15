@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Traits\TRecord;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -14,11 +17,20 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ApiResource()]
+#[ApiFilter(SearchFilter::class, properties: ['email' => 'exact'])]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: "`user`")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
-    use TRecord;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[ApiProperty(identifier: false)]
+    private int $id;
+
+    public function getId() {
+        return $this->id;
+    }
 
     #[ORM\Column(type: 'json')]
     private array $roles = [];
@@ -26,6 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     //---------pre-reg----------//
 
     #[ORM\Column(type: 'string', length: 100, unique: true)]
+    #[ApiProperty(identifier: true)]
     private string $erpId;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]

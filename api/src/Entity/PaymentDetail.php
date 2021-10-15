@@ -2,11 +2,14 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Traits\TRecord;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ApiResource()]
+#[ApiFilter(SearchFilter::class, properties: ['user.erpId' => 'exact'])]
 #[ORM\Entity()]
 #[ORM\InheritanceType("SINGLE_TABLE")]
 class PaymentDetail {
