@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Entity\Traits\TRecord;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource()]
 #[ORM\Entity()]
@@ -13,9 +14,11 @@ class Offer {
     use TRecord;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $title;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $body;
 
     public function getTitle(): ?string

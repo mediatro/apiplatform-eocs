@@ -9,18 +9,24 @@ use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Traits\TRecord;
+use App\Entity\Traits\TStatus;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ApiResource()]
+#[ApiResource(
+    normalizationContext: ['groups' => ['user']]
+)]
 #[ApiFilter(SearchFilter::class, properties: ['email' => 'exact'])]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: "`user`")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface {
+
+    use TStatus;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -39,12 +45,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
     #[ORM\Column(type: 'string', length: 100, unique: true)]
     #[ApiProperty(identifier: true)]
+    #[Groups("user")]
     private string $erpId;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Groups("user")]
     private string $email;
 
     #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
+    #[Groups("user")]
     private Offer $currentOffer;
 
     //---------reg----------//
@@ -53,48 +62,62 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
      * The hashed password.
      */
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $password;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $phone;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $userType;
 
     //-------------------------------
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $firstName;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $lastName;
 
     #[ORM\Column(type: 'date')]
+    #[Groups("user")]
     private \DateTime $birthday;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $country;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $city;
 
     #[ORM\Column(type: 'string')]
+    #[Groups("user")]
     private string $address;
 
     //---------post-reg----------//
 
-    #[ORM\Column(type: 'boolean')]
-    private bool $verified  = false;
-
-    #[ORM\Column(type: 'boolean')]
-    private bool $consented = false;
-
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'OfferHistoryRecord')]
     private iterable $offersHistoryRecords;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'PaymentDetail')]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'PaymentDetail', fetch: 'EAGER')]
+    #[Groups("user")]
     private iterable $paymentDetails;
 
+    #[ApiProperty(readable: true, writable: false)]
+    #[Groups("user")]
+    public function getActivePaymentDetail(): ?PaymentDetail {
+        foreach ($this->getPaymentDetails() as $detail){
+            if (true || $detail->isActive()){
+                return $detail;
+            }
+        }
+        return null;
+    }
 
 
     public function __construct()
@@ -271,30 +294,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     public function setAddress(string $address): self
     {
         $this->address = $address;
-
-        return $this;
-    }
-
-    public function getVerified(): ?bool
-    {
-        return $this->verified;
-    }
-
-    public function setVerified(bool $verified): self
-    {
-        $this->verified = $verified;
-
-        return $this;
-    }
-
-    public function getConsented(): ?bool
-    {
-        return $this->consented;
-    }
-
-    public function setConsented(bool $consented): self
-    {
-        $this->consented = $consented;
 
         return $this;
     }
