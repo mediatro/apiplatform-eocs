@@ -19,7 +19,17 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
-    normalizationContext: ['groups' => ['user']]
+    collectionOperations: [
+        "get",
+        "post" => ["security" => "is_granted('ROLE_ADMIN')"],
+    ],
+    itemOperations: [
+        "get",
+        "put"    => ["security" => "is_granted('ROLE_ADMIN') or object.getStatus() == 'new'"],
+        "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN') or object.getStatus() == 'new'"],
+    ],
+    normalizationContext: ['groups' => ['user']],
 )]
 #[ApiFilter(SearchFilter::class, properties: ['email' => 'exact'])]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -54,7 +64,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
     #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
     #[Groups("user")]
-    private Offer $currentOffer;
+    private ?Offer $currentOffer = null;
 
     //---------reg----------//
 
@@ -63,56 +73,71 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
      */
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN')")]
     private string $password;
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $phone;
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $userType;
 
     //-------------------------------
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $firstName;
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $lastName;
 
     #[ORM\Column(type: 'date')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private \DateTime $birthday;
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $country;
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $city;
 
     #[ORM\Column(type: 'string')]
     #[Groups("user")]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $address;
 
     //---------post-reg----------//
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'OfferHistoryRecord')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private iterable $offersHistoryRecords;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'PaymentDetail', fetch: 'EAGER')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     #[Groups("user")]
     private iterable $paymentDetails;
 
-    #[ApiProperty(readable: true, writable: false)]
+    #[ApiProperty(
+        readable: true,
+        writable: false,
+        security:  "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"
+    )]
     #[Groups("user")]
     public function getActivePaymentDetail(): ?PaymentDetail {
         foreach ($this->getPaymentDetails() as $detail){
-            if (true || $detail->isActive()){
+            if ($detail->isActive()){
                 return $detail;
             }
         }
@@ -126,6 +151,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         $this->paymentDetails = new ArrayCollection();
     }
 
+    public function getOwner(): ?User {
+        return $this;
+    }
 
     public function getEmail(): ?string {
         return $this->email;

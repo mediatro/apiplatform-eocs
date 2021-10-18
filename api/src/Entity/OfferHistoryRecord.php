@@ -4,19 +4,37 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Entity\Traits\TRecord;
+use App\Entity\Traits\TTimestampable;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        "get",
+        "post" => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', request)"],
+    ],
+    itemOperations: [
+        "get",
+        "put"    => ["security" => "is_granted('ROLE_ADMIN')"],
+        "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
+    ],
+)]
 #[ORM\Entity()]
 class OfferHistoryRecord {
 
     use TRecord;
+    use TTimestampable;
 
     #[ORM\ManyToOne(targetEntity: 'User', fetch: 'EAGER', inversedBy: 'offersHistoryRecords')]
     private User $user;
 
     #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
     private Offer $offer;
+
+    public function getOwner(): ?User {
+        return $this->getUser();
+    }
+
 
     public function getUser(): ?User
     {

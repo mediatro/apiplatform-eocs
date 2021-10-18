@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Traits\TRecord;
@@ -12,7 +13,17 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        "get",
+    ],
+    itemOperations: [
+        "get",
+        "put"    => ["security" => "is_granted('ROLE_ADMIN')"],
+        "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
+    ],
+)]
 #[ApiFilter(SearchFilter::class, properties: ['user.erpId' => 'exact'])]
 #[ORM\Entity()]
 #[ORM\InheritanceType("SINGLE_TABLE")]
@@ -23,29 +34,39 @@ class PaymentDetail {
 
     #[ORM\Column(type: 'string')]
     #[Groups(["user", "payment"])]
-    private string $method = '';
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected string $method = '';
 
     #[ORM\Column(type: 'string')]
     #[Groups(["user", "payment"])]
-    private string $currency;
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected string $currency;
 
     #[ORM\Column(type: 'float', nullable: true)]
     #[Groups(["user", "payment"])]
-    private ?float $payLimit = null;
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected ?float $payLimit = null;
 
     #[ORM\ManyToOne(targetEntity: 'User', fetch: 'EAGER', inversedBy: 'paymentDetails')]
-    private User $user;
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected User $user;
 
     #[ORM\OneToMany(mappedBy: 'detail', targetEntity: 'PaymentRequest')]
-    private iterable $paymentRequests;
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected iterable $paymentRequests;
 
     #[ORM\OneToMany(mappedBy: 'detail', targetEntity: 'Payment')]
-    private iterable $payments;
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected iterable $payments;
 
     public function __construct()
     {
         $this->paymentRequests = new ArrayCollection();
         $this->payments = new ArrayCollection();
+    }
+
+    public function getOwner(): ?User {
+        return $this->getUser();
     }
 
     public function isActive(): bool {

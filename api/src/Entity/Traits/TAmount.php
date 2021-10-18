@@ -1,14 +1,16 @@
 <?php
 
 namespace App\Entity\Traits;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 trait TAmount {
 
     #[ORM\Column(type: 'float')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     #[Groups("payment")]
-    private string $amount;
+    protected string $amount;
 
     public function getAmount(): ?float
     {

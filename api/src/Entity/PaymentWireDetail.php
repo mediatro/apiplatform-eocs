@@ -2,29 +2,47 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        "get",
+        "post" => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', request)"],
+    ],
+    itemOperations: [
+        "get",
+        "put"    => ["security" => "is_granted('ROLE_ADMIN')"],
+        "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
+    ],
+)]
 #[ORM\Entity()]
 class PaymentWireDetail extends PaymentDetail {
 
     #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $accountHolderName;
 
     #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $country;
 
     #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $beneficiaryBankName;
 
     #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $beneficiaryBankAddress;
 
     #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $beneficiaryBankAccountIban;
 
     #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $beneficiaryBankSwift;
 
     public function getAccountHolderName(): ?string

@@ -3,16 +3,29 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Traits\TAmount;
 use App\Entity\Traits\TRecord;
 use App\Entity\Traits\TStatus;
+use App\Entity\Traits\TTimestampable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        "get",
+        "post" => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', request)"],
+    ],
+    itemOperations: [
+        "get",
+        "put"    => ["security" => "is_granted('ROLE_ADMIN')"],
+        "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
+    ],
+)]
 #[ApiFilter(SearchFilter::class, properties: ['detail.user.erpId' => 'exact'])]
 #[ORM\Entity()]
 class PaymentRequest {
@@ -20,11 +33,14 @@ class PaymentRequest {
     use TRecord;
     use TAmount;
     use TStatus;
+    use TTimestampable;
 
     #[ORM\ManyToOne(targetEntity: 'PaymentDetail', inversedBy: 'paymentRequests')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private PaymentDetail $detail;
 
     #[ORM\OneToMany(mappedBy: 'request', targetEntity: 'Payment')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private iterable $payments;
 
     public function __construct()
