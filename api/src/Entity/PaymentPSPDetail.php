@@ -23,6 +23,10 @@ class PaymentPSPDetail extends PaymentDetail {
 
     #[ORM\Column(type: 'string')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    private string $platform;
+
+    #[ORM\Column(type: 'string')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $accountHolderName;
 
     #[ORM\Column(type: 'string')]
@@ -49,6 +53,18 @@ class PaymentPSPDetail extends PaymentDetail {
     public function setWalletNumberEmail(string $walletNumberEmail): self
     {
         $this->walletNumberEmail = $walletNumberEmail;
+
+        return $this;
+    }
+
+    public function getPlatform(): ?string
+    {
+        return $this->platform;
+    }
+
+    public function setPlatform(string $platform): self
+    {
+        $this->platform = $platform;
 
         return $this;
     }

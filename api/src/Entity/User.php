@@ -8,6 +8,7 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Traits\TErpId;
 use App\Entity\Traits\TRecord;
 use App\Entity\Traits\TStatus;
 use App\Repository\UserRepository;
@@ -20,113 +21,82 @@ use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
     collectionOperations: [
-        "get",
-        "post" => ["security" => "is_granted('ROLE_ADMIN')"],
+        "get"  => ["security" => "is_granted('ROLE_ADMIN')"],
+        "post",
     ],
     itemOperations: [
-        "get",
-        "put"    => ["security" => "is_granted('ROLE_ADMIN') or object.getStatus() == 'new'"],
+        "get"    => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"],
+        "put"    => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"],
         "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
-        "patch"  => ["security" => "is_granted('ROLE_ADMIN') or object.getStatus() == 'new'"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"],
     ],
     normalizationContext: ['groups' => ['user']],
 )]
 #[ApiFilter(SearchFilter::class, properties: ['email' => 'exact'])]
-#[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\Entity(/*repositoryClass: UserRepository::class*/)]
 #[ORM\Table(name: "`user`")]
+#[ORM\InheritanceType("SINGLE_TABLE")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
+    use TErpId;
     use TStatus;
+
+    //---------system----------//
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     #[ApiProperty(identifier: false)]
+    #[Groups(['user', 'user_public'])]
     private int $id;
-
-    public function getId() {
-        return $this->id;
-    }
-
-    #[ORM\Column(type: 'json')]
-    private array $roles = [];
-
-    //---------pre-reg----------//
 
     #[ORM\Column(type: 'string', length: 100, unique: true)]
     #[ApiProperty(identifier: true)]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     private string $erpId;
 
-    #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[Groups("user")]
-    private string $email;
-
-    #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
-    #[Groups("user")]
-    private ?Offer $currentOffer = null;
-
-    //---------reg----------//
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
 
     /**
      * The hashed password.
      */
     #[ORM\Column(type: 'string')]
-    #[Groups("user")]
+    #[Groups(['user'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN')")]
     private string $password;
 
+    //---------reg----------//
+
     #[ORM\Column(type: 'string')]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $phone;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user")]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private string $userType;
-
-    //-------------------------------
-
-    #[ORM\Column(type: 'string')]
-    #[Groups("user")]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private string $firstName;
-
-    #[ORM\Column(type: 'string')]
-    #[Groups("user")]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private string $lastName;
-
-    #[ORM\Column(type: 'date')]
-    #[Groups("user")]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private \DateTime $birthday;
-
-    #[ORM\Column(type: 'string')]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $country;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private string $city;
-
-    #[ORM\Column(type: 'string')]
-    #[Groups("user")]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private string $address;
+    private string $userType;
 
     //---------post-reg----------//
 
+    #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
+    #[Groups(['user', 'user_public'])]
+    private ?Offer $currentOffer = null;
+
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'OfferHistoryRecord')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user', 'user_public'])]
     private iterable $offersHistoryRecords;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'PaymentDetail', fetch: 'EAGER')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     private iterable $paymentDetails;
 
     #[ApiProperty(
@@ -134,7 +104,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         writable: false,
         security:  "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"
     )]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     public function getActivePaymentDetail(): ?PaymentDetail {
         foreach ($this->getPaymentDetails() as $detail){
             if ($detail->isActive()){
@@ -151,16 +121,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         $this->paymentDetails = new ArrayCollection();
     }
 
-    public function getOwner(): ?User {
+    public function getOwner() {
         return $this;
-    }
-
-    public function getEmail(): ?string {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): void {
-        $this->email = $email;
     }
 
     /**
@@ -218,18 +180,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         return (string)$this->email;
     }
 
-    public function getErpId(): ?string
-    {
-        return $this->erpId;
-    }
-
-    public function setErpId(string $erpId): self
-    {
-        $this->erpId = $erpId;
-
-        return $this;
-    }
-
     public function getPhone(): ?string
     {
         return $this->phone;
@@ -254,42 +204,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         return $this;
     }
 
-    public function getFirstName(): ?string
-    {
-        return $this->firstName;
-    }
-
-    public function setFirstName(string $firstName): self
-    {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    public function getLastName(): ?string
-    {
-        return $this->lastName;
-    }
-
-    public function setLastName(string $lastName): self
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
-    public function getBirthday(): ?\DateTimeInterface
-    {
-        return $this->birthday;
-    }
-
-    public function setBirthday(\DateTimeInterface $birthday): self
-    {
-        $this->birthday = $birthday;
-
-        return $this;
-    }
-
     public function getCountry(): ?string
     {
         return $this->country;
@@ -298,30 +212,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     public function setCountry(string $country): self
     {
         $this->country = $country;
-
-        return $this;
-    }
-
-    public function getCity(): ?string
-    {
-        return $this->city;
-    }
-
-    public function setCity(string $city): self
-    {
-        $this->city = $city;
-
-        return $this;
-    }
-
-    public function getAddress(): ?string
-    {
-        return $this->address;
-    }
-
-    public function setAddress(string $address): self
-    {
-        $this->address = $address;
 
         return $this;
     }

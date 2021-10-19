@@ -11,6 +11,7 @@ use App\Entity\PaymentRequest;
 use App\Entity\PaymentWireDetail;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -18,9 +19,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class OwnedVoter extends Voter {
 
     private $em;
+    private $requestStack;
 
-    public function __construct(EntityManagerInterface $em) {
+    public function __construct(EntityManagerInterface $em, RequestStack $requestStack) {
         $this->em = $em;
+        $this->requestStack = $requestStack;
     }
 
     protected function supports(string $attribute, $subject): bool {
@@ -32,6 +35,13 @@ class OwnedVoter extends Voter {
             return true;
         }*/
 
+        $op = $this->requestStack->getCurrentRequest()->attributes->get("_api_collection_operation_name");
+
+        if($op == 'post' && !($subject instanceof Request)){
+            return true;
+        }
+
+
         $user = $token->getUser();
 
         // if the user is anonymous, do not grant access
@@ -41,6 +51,7 @@ class OwnedVoter extends Voter {
 
         //POST
         if ($subject instanceof Request) {
+
 
             $body = json_decode($subject->getContent(), true);
             if ($body) {
@@ -54,7 +65,8 @@ class OwnedVoter extends Voter {
 
                     OfferHistoryRecord::class,
                 ])) {
-                    if ($body['user'] && str_replace('/users/', '', $body['user']) == $user->getErpId()) {
+                    $id = preg_replace('/.+\\//', '', $body['user']);
+                    if ($body['user'] && $id == $user->getErpId()) {
                         return true;
                     }
                 }

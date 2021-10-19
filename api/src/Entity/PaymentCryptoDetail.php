@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
         "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
         "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
     ],
+    shortName: 'PaymentCryptoDetail',
 )]
 #[ORM\Entity()]
 class PaymentCryptoDetail extends PaymentDetail {

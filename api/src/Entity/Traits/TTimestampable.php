@@ -22,7 +22,7 @@ trait TTimestampable
      */
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(["user", "payment"])]
-    protected $createdAt;
+    private $createdAt;
 
     /**
      * @var \DateTime
@@ -31,7 +31,7 @@ trait TTimestampable
      */
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(["user", "payment"])]
-    protected $updatedAt;
+    private $updatedAt;
 
     /**
      * Sets createdAt.
