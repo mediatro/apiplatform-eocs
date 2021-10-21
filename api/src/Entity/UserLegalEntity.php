@@ -88,4 +88,6 @@ class UserLegalEntity extends User {
         return $this;
     }
 
+
+
 }

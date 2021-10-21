@@ -47,6 +47,11 @@ class PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     protected ?float $payLimit = null;
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    #[Groups(["user", "user_public", "payment"])]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected ?string $displayString;
+
     #[ORM\ManyToOne(targetEntity: 'User', fetch: 'EAGER', inversedBy: 'paymentDetails')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     protected User $user;
@@ -70,7 +75,7 @@ class PaymentDetail {
     }
 
     public function isActive(): bool {
-        return $this->getPayLimit() <> null && $this->getPayLimit() > 0;
+        return $this->getPayLimit() !== null && $this->getStatus() == 'verified';
     }
 
     public function getMethod(): ?string
@@ -178,6 +183,18 @@ class PaymentDetail {
                 $payment->setDetail(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDisplayString(): ?string
+    {
+        return $this->displayString;
+    }
+
+    public function setDisplayString(?string $displayString): self
+    {
+        $this->displayString = $displayString;
 
         return $this;
     }

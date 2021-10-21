@@ -110,11 +110,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         foreach ($this->getPaymentDetails() as $detail){
             if ($detail->isActive()){
                 $ret = $detail;
+            }else{
+                $ret = null;
             }
         }
         return $ret;
     }
 
+    /**
+     * @return PaymentRequest[]
+     */
+    #[ApiProperty(
+        readable: true,
+        writable: false,
+        security:  "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"
+    )]
+    #[Groups(['user', 'user_public'])]
+    public function getActivePaymentRequests() {
+        $ret = [];
+        foreach ($this->getPaymentDetails() as $detail){
+            foreach ($detail->getPaymentRequests() as $request){
+                if($request->getStatus() == 'new'){
+                    $ret[]=$request;
+                }
+            }
+        }
+        return $ret;
+    }
 
     public function __construct()
     {

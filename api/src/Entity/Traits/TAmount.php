@@ -9,7 +9,7 @@ trait TAmount {
 
     #[ORM\Column(type: 'float')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    #[Groups("payment")]
+    #[Groups(["payment", "user", "user_public"])]
     private string $amount;
 
     public function getAmount(): ?float

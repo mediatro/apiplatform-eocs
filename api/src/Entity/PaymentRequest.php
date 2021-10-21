@@ -13,6 +13,7 @@ use App\Entity\Traits\TTimestampable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
     collectionOperations: [
@@ -25,18 +26,20 @@ use Doctrine\ORM\Mapping as ORM;
         "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
         "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
     ],
+    normalizationContext: ['groups' => ['user', 'user_public']],
 )]
 #[ApiFilter(SearchFilter::class, properties: ['detail.user.erpId' => 'exact'])]
 #[ORM\Entity()]
-class PaymentRequest {
+class   PaymentRequest {
 
     use TRecord;
     use TAmount;
     use TStatus;
     use TTimestampable;
 
-    #[ORM\ManyToOne(targetEntity: 'PaymentDetail', inversedBy: 'paymentRequests')]
+    #[ORM\ManyToOne(targetEntity: 'PaymentDetail', fetch: 'EAGER', inversedBy: 'paymentRequests')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user', 'user_public'])]
     private PaymentDetail $detail;
 
     #[ORM\OneToMany(mappedBy: 'request', targetEntity: 'Payment')]
@@ -48,7 +51,9 @@ class PaymentRequest {
         $this->payments = new ArrayCollection();
     }
 
-
+    public function getOwner(): ?User {
+        return $this->getDetail()->getUser();
+    }
 
     public function getDetail(): ?PaymentDetail
     {

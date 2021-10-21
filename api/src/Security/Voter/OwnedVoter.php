@@ -89,6 +89,7 @@ class OwnedVoter extends Voter {
             return true;
         }
 
+
         if ($subject && method_exists($subject, 'getOwner') && $user == $subject->getOwner()) {
             return true;
         }

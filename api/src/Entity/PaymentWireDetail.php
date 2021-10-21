@@ -45,6 +45,8 @@ class PaymentWireDetail extends PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $beneficiaryBankSwift;
 
+
+
     public function getAccountHolderName(): ?string
     {
         return $this->accountHolderName;
