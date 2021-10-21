@@ -6,6 +6,7 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use App\Entity\Traits\TRecord;
 use App\Entity\Traits\TTimestampable;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
     collectionOperations: [
@@ -29,6 +30,7 @@ class OfferHistoryRecord {
     private User $user;
 
     #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
+    #[Groups(['user', 'user_public'])]
     private Offer $offer;
 
     public function getOwner(): ?User {

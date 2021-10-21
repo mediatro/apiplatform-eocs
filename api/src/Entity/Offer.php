@@ -25,11 +25,11 @@ class Offer {
     use TRecord;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     private string $title;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user")]
+    #[Groups(['user', 'user_public'])]
     private string $body;
 
     public function getTitle(): ?string

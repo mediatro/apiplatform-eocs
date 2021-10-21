@@ -106,12 +106,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     )]
     #[Groups(['user', 'user_public'])]
     public function getActivePaymentDetail(): ?PaymentDetail {
+        $ret = null;
         foreach ($this->getPaymentDetails() as $detail){
             if ($detail->isActive()){
-                return $detail;
+                $ret = $detail;
             }
         }
-        return null;
+        return $ret;
     }
 
 
