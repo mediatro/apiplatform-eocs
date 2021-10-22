@@ -99,6 +99,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     #[Groups(['user', 'user_public'])]
     private iterable $paymentDetails;
 
+    #[ORM\ManyToOne(targetEntity: 'MediaObject')]
+    #[ApiProperty(iri: 'http://schema.org/image')]
+    #[Groups(['user', 'user_public'])]
+    public ?MediaObject $image = null;
+
     #[ApiProperty(
         readable: true,
         writable: false,
