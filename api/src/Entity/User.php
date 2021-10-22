@@ -68,10 +68,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
     //---------reg----------//
 
-    #[ORM\Column(type: 'string')]
+    #[ORM\Column(type: 'string', nullable: true)]
     #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    private string $phone;
+    private ?string $phone;
 
     #[ORM\Column(type: 'string')]
     #[Groups(['user', 'user_public'])]
@@ -130,7 +130,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         $ret = [];
         foreach ($this->getPaymentDetails() as $detail){
             foreach ($detail->getPaymentRequests() as $request){
-                if($request->getStatus() == 'new'){
+                if($request->getStatus() == 'new' || $request->getCreatedAt()->diff(new \DateTime())->days < 5){
                     $ret[]=$request;
                 }
             }
