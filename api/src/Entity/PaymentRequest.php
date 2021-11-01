@@ -42,9 +42,15 @@ class   PaymentRequest {
     #[Groups(['user', 'user_public'])]
     private PaymentDetail $detail;
 
+    #[ORM\ManyToOne(targetEntity: 'SiteHistoryRecord', fetch: 'EAGER')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user', 'user_public'])]
+    private ?SiteHistoryRecord $siteHistoryRecord;
+
     #[ORM\OneToMany(mappedBy: 'request', targetEntity: 'Payment')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private iterable $payments;
+
 
     public function __construct()
     {
@@ -93,6 +99,18 @@ class   PaymentRequest {
                 $payment->setRequest(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSiteHistoryRecord(): ?SiteHistoryRecord
+    {
+        return $this->siteHistoryRecord;
+    }
+
+    public function setSiteHistoryRecord(?SiteHistoryRecord $siteHistoryRecord): self
+    {
+        $this->siteHistoryRecord = $siteHistoryRecord;
 
         return $this;
     }

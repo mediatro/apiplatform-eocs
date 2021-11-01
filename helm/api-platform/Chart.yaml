@@ -1,6 +1,6 @@
 apiVersion: v2
 name: api-platform
-description: A Helm chart for an API Platform project
+description: A Helm chart for an API PaymentPlatform project
 home: https://api-platform.com
 icon: https://api-platform.com/logo-250x250.png
 

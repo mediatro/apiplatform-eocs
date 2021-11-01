@@ -8,6 +8,7 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Traits\TEmail;
 use App\Entity\Traits\TErpId;
 use App\Entity\Traits\TRecord;
 use App\Entity\Traits\TStatus;
@@ -39,6 +40,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class User implements UserInterface, PasswordAuthenticatedUserInterface {
 
     use TErpId;
+    use TEmail;
     use TStatus;
 
     //---------system----------//
@@ -83,43 +85,43 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $userType;
 
+    #[ORM\ManyToOne(targetEntity: 'MediaObject')]
+    #[ApiProperty(iri: 'http://schema.org/image', security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user', 'user_public'])]
+    public ?MediaObject $image = null;
+
     //---------post-reg----------//
-
-    #[ORM\ManyToOne(targetEntity: 'Offer', fetch: 'EAGER')]
-    #[Groups(['user', 'user_public'])]
-    private ?Offer $currentOffer = null;
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'OfferHistoryRecord')]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    #[Groups(['user', 'user_public'])]
-    private iterable $offersHistoryRecords;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'PaymentDetail', fetch: 'EAGER')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     #[Groups(['user', 'user_public'])]
     private iterable $paymentDetails;
 
-    #[ORM\ManyToOne(targetEntity: 'MediaObject')]
-    #[ApiProperty(iri: 'http://schema.org/image')]
-    #[Groups(['user', 'user_public'])]
-    public ?MediaObject $image = null;
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: 'SiteHistoryRecord')]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user'])]
+    private iterable $siteHistoryRecords;
 
+    #[ORM\OneToOne(targetEntity: 'PaymentDetail')]
+    #[Groups(['user', 'user_public'])]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    private ?PaymentDetail $activePaymentDetail;
+
+    /**
+     * @return SiteHistoryRecord[]
+     */
     #[ApiProperty(
         readable: true,
         writable: false,
         security:  "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"
     )]
     #[Groups(['user', 'user_public'])]
-    public function getActivePaymentDetail(): ?PaymentDetail {
-        $ret = null;
-        foreach ($this->getPaymentDetails() as $detail){
-            if ($detail->isActive()){
-                $ret = $detail;
-            }else{
-                $ret = null;
-            }
+    public function getAvailableSiteRecords() {
+        $ret = [];
+        foreach ($this->getSiteHistoryRecords() as $record){
+            $ret[$record->getSite()->getId()] = $record->isActive() ? $record : null;
         }
-        return $ret;
+        return array_values($ret);
     }
 
     /**
@@ -143,14 +145,32 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         return $ret;
     }
 
-    public function __construct()
-    {
-        $this->offersHistoryRecords = new ArrayCollection();
-        $this->paymentDetails = new ArrayCollection();
-    }
+    /*#[ApiProperty(
+        readable: true,
+        writable: false,
+        security:  "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"
+    )]
+    #[Groups(['user', 'user_public'])]
+    public function getActivePaymentDetail(): ?PaymentDetail {
+        $ret = null;
+        foreach ($this->getPaymentDetails() as $detail){
+            if ($detail->isActive()){
+                $ret = $detail;
+            }else{
+                $ret = null;
+            }
+        }
+        return $ret;
+    }*/
 
     public function getOwner() {
         return $this;
+    }
+
+    public function __construct()
+    {
+        $this->paymentDetails = new ArrayCollection();
+        $this->siteHistoryRecords = new ArrayCollection();
     }
 
     /**
@@ -244,48 +264,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
         return $this;
     }
 
-    public function getCurrentOffer(): ?Offer
-    {
-        return $this->currentOffer;
-    }
-
-    public function setCurrentOffer(?Offer $currentOffer): self
-    {
-        $this->currentOffer = $currentOffer;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|OfferHistoryRecord[]
-     */
-    public function getOffersHistoryRecords(): Collection
-    {
-        return $this->offersHistoryRecords;
-    }
-
-    public function addOffersHistoryRecord(OfferHistoryRecord $offersHistoryRecord): self
-    {
-        if (!$this->offersHistoryRecords->contains($offersHistoryRecord)) {
-            $this->offersHistoryRecords[] = $offersHistoryRecord;
-            $offersHistoryRecord->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOffersHistoryRecord(OfferHistoryRecord $offersHistoryRecord): self
-    {
-        if ($this->offersHistoryRecords->removeElement($offersHistoryRecord)) {
-            // set the owning side to null (unless already changed)
-            if ($offersHistoryRecord->getUser() === $this) {
-                $offersHistoryRecord->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
     /**
      * @return Collection|PaymentDetail[]
      */
@@ -312,6 +290,60 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface {
                 $paymentDetail->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getImage(): ?MediaObject
+    {
+        return $this->image;
+    }
+
+    public function setImage(?MediaObject $image): self
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|SiteHistoryRecord[]
+     */
+    public function getSiteHistoryRecords(): Collection
+    {
+        return $this->siteHistoryRecords;
+    }
+
+    public function addSiteHistoryRecord(SiteHistoryRecord $siteHistoryRecord): self
+    {
+        if (!$this->siteHistoryRecords->contains($siteHistoryRecord)) {
+            $this->siteHistoryRecords[] = $siteHistoryRecord;
+            $siteHistoryRecord->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSiteHistoryRecord(SiteHistoryRecord $siteHistoryRecord): self
+    {
+        if ($this->siteHistoryRecords->removeElement($siteHistoryRecord)) {
+            // set the owning side to null (unless already changed)
+            if ($siteHistoryRecord->getUser() === $this) {
+                $siteHistoryRecord->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getActivePaymentDetail(): ?PaymentDetail
+    {
+        return $this->activePaymentDetail;
+    }
+
+    public function setActivePaymentDetail(?PaymentDetail $activePaymentDetail): self
+    {
+        $this->activePaymentDetail = $activePaymentDetail;
 
         return $this;
     }

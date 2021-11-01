@@ -9,6 +9,7 @@ use App\Entity\PaymentOCTDetail;
 use App\Entity\PaymentPSPDetail;
 use App\Entity\PaymentRequest;
 use App\Entity\PaymentWireDetail;
+use App\Entity\SiteHistoryRecord;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -63,7 +64,7 @@ class OwnedVoter extends Voter {
                     PaymentPSPDetail::class,
                     PaymentWireDetail::class,
 
-                    OfferHistoryRecord::class,
+                    SiteHistoryRecord::class,
                 ])) {
                     $id = preg_replace('/.+\\//', '', $body['user']);
                     if ($body['user'] && $id == $user->getErpId()) {

@@ -35,11 +35,6 @@ class PaymentDetail {
     #[ORM\Column(type: 'string')]
     #[Groups(["user", "payment"])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
-    protected string $method = '';
-
-    #[ORM\Column(type: 'string')]
-    #[Groups(["user", "payment"])]
-    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     protected string $currency;
 
     #[ORM\Column(type: 'float', nullable: true)]
@@ -56,6 +51,11 @@ class PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     protected User $user;
 
+    #[ORM\ManyToOne(targetEntity: 'PaymentMethod', inversedBy: 'platforms')]
+    #[Groups(["user", "payment"])]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    protected PaymentMethod $method;
+
     #[ORM\OneToMany(mappedBy: 'detail', targetEntity: 'PaymentRequest')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     protected iterable $paymentRequests;
@@ -63,12 +63,6 @@ class PaymentDetail {
     #[ORM\OneToMany(mappedBy: 'detail', targetEntity: 'Payment')]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     protected iterable $payments;
-
-    public function __construct()
-    {
-        $this->paymentRequests = new ArrayCollection();
-        $this->payments = new ArrayCollection();
-    }
 
     public function getOwner(): ?User {
         return $this->getUser();
@@ -78,16 +72,10 @@ class PaymentDetail {
         return $this->getPayLimit() !== null && $this->getStatus() == 'verified';
     }
 
-    public function getMethod(): ?string
+    public function __construct()
     {
-        return $this->method;
-    }
-
-    public function setMethod(string $method): self
-    {
-        $this->method = $method;
-
-        return $this;
+        $this->paymentRequests = new ArrayCollection();
+        $this->payments = new ArrayCollection();
     }
 
     public function getCurrency(): ?string
@@ -195,6 +183,18 @@ class PaymentDetail {
     public function setDisplayString(?string $displayString): self
     {
         $this->displayString = $displayString;
+
+        return $this;
+    }
+
+    public function getMethod(): ?PaymentMethod
+    {
+        return $this->method;
+    }
+
+    public function setMethod(?PaymentMethod $method): self
+    {
+        $this->method = $method;
 
         return $this;
     }

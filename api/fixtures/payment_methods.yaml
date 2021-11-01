@@ -1,0 +1,33 @@
+App\Entity\PaymentMethod:
+    wire:
+        codename: wire_transfer 
+    psp:
+        codename: psp 
+        countryWhiteList: ['AM']
+    crypto:
+        codename: crypto
+        countryWhiteList: ['US']
+    oct:
+        codename: oct
+        countryBlackList: ['AM']
+
+App\Entity\PaymentPlatform:
+    dummy_1:
+        codename: <domainWord()>
+        displayName: <company()>
+        method: '@psp'
+    dummy_2:
+        codename: <domainWord()>
+        displayName: <company()>
+        method: '@psp'
+        countryWhiteList: ['AM']
+    dummy_3:
+        codename: <domainWord()>
+        displayName: <company()>
+        countryWhiteList: ['US']
+        method: '@psp'
+    dummy_4:
+        codename: <domainWord()>
+        displayName: <company()>
+        countryBlackList: ['AM']
+        method: '@psp'

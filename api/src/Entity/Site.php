@@ -1,17 +1,15 @@
 <?php
 
 namespace App\Entity;
-use ApiPlatform\Core\Annotation\ApiProperty;
+
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Entity\Traits\TEmail;
 use App\Entity\Traits\TErpId;
-use App\Entity\Traits\TStatus;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
     collectionOperations: [
-        "get"  => ["security" => "is_granted('ROLE_ADMIN')"],
+        "get",
         "post" => ["security" => "is_granted('ROLE_ADMIN')"],
     ],
     itemOperations: [
@@ -20,13 +18,26 @@ use Symfony\Component\Serializer\Annotation\Groups;
         "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
         "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
     ],
-    normalizationContext: ['groups' => ['user']],
 )]
 #[ORM\Entity()]
-class UserPreReg {
+class Site {
 
     use TErpId;
-    use TEmail;
-    use TStatus;
+
+    #[ORM\Column(type: 'string')]
+    #[Groups(['user', 'user_public'])]
+    private string $name;
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
 
 }
