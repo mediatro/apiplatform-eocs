@@ -33,7 +33,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
     ],
     normalizationContext: ['groups' => ['user']],
 )]
-#[ApiFilter(SearchFilter::class, properties: ['email' => 'exact'])]
+#[ApiFilter(SearchFilter::class, properties: [
+    'email' => 'exact',
+    'status' => 'exact',
+])]
 #[ORM\Entity(/*repositoryClass: UserRepository::class*/)]
 #[ORM\Table(name: "`user`")]
 #[ORM\InheritanceType("SINGLE_TABLE")]

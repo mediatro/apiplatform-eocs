@@ -19,11 +19,6 @@ class PasswordHasherListener {
 
     public function prePersist(User $user, LifecycleEventArgs $args): void {
         $user->setPassword($this->passwordEncoder->hashPassword($user, $user->getPassword()));
-
-        /*$record = new SiteHistoryRecord();
-        $record->setSite()
-
-        $user->addSiteHistoryRecord()*/
     }
 
 }

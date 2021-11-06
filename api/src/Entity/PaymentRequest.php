@@ -24,11 +24,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
         "get",
         "put"    => ["security" => "is_granted('ROLE_ADMIN')"],
         "delete" => ["security" => "is_granted('ROLE_ADMIN')"],
-        "patch"  => ["security" => "is_granted('ROLE_ADMIN')"],
+        "patch"  => ["security" => "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"],
     ],
     normalizationContext: ['groups' => ['user', 'user_public']],
 )]
-#[ApiFilter(SearchFilter::class, properties: ['detail.user.erpId' => 'exact'])]
+#[ApiFilter(SearchFilter::class, properties: [
+    'detail.user.erpId' => 'exact',
+    'status' => 'exact',
+])]
 #[ORM\Entity()]
 class   PaymentRequest {
 
@@ -51,9 +54,26 @@ class   PaymentRequest {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private iterable $payments;
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user', 'user_public'])]
+    private ?string $hashedToken = null;
 
-    public function __construct()
-    {
+    #[ORM\Column(type: 'string', nullable: true)]
+    #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
+    #[Groups(['user', 'user_public'])]
+    public ?string $token = null;
+
+    #[ApiProperty(
+        readable: true,
+        writable: false,
+        security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)"
+    )]
+    #[Groups(['user', 'user_public'])]
+    public bool $tokenValid = false;
+
+
+    public function __construct() {
         $this->payments = new ArrayCollection();
     }
 
@@ -61,13 +81,11 @@ class   PaymentRequest {
         return $this->getDetail()->getUser();
     }
 
-    public function getDetail(): ?PaymentDetail
-    {
+    public function getDetail(): ?PaymentDetail {
         return $this->detail;
     }
 
-    public function setDetail(?PaymentDetail $detail): self
-    {
+    public function setDetail(?PaymentDetail $detail): self {
         $this->detail = $detail;
 
         return $this;
@@ -76,13 +94,11 @@ class   PaymentRequest {
     /**
      * @return Collection|Payment[]
      */
-    public function getPayments(): Collection
-    {
+    public function getPayments(): Collection {
         return $this->payments;
     }
 
-    public function addPayment(Payment $payment): self
-    {
+    public function addPayment(Payment $payment): self {
         if (!$this->payments->contains($payment)) {
             $this->payments[] = $payment;
             $payment->setRequest($this);
@@ -91,8 +107,7 @@ class   PaymentRequest {
         return $this;
     }
 
-    public function removePayment(Payment $payment): self
-    {
+    public function removePayment(Payment $payment): self {
         if ($this->payments->removeElement($payment)) {
             // set the owning side to null (unless already changed)
             if ($payment->getRequest() === $this) {
@@ -103,14 +118,32 @@ class   PaymentRequest {
         return $this;
     }
 
-    public function getSiteHistoryRecord(): ?SiteHistoryRecord
-    {
+    public function getSiteHistoryRecord(): ?SiteHistoryRecord {
         return $this->siteHistoryRecord;
     }
 
-    public function setSiteHistoryRecord(?SiteHistoryRecord $siteHistoryRecord): self
-    {
+    public function setSiteHistoryRecord(?SiteHistoryRecord $siteHistoryRecord): self {
         $this->siteHistoryRecord = $siteHistoryRecord;
+
+        return $this;
+    }
+
+    public function getHashedToken(): ?string {
+        return $this->hashedToken;
+    }
+
+    public function setHashedToken(?string $hashedToken): self {
+        $this->hashedToken = $hashedToken;
+
+        return $this;
+    }
+
+    public function getToken(): ?string {
+        return $this->token;
+    }
+
+    public function setToken(?string $token): self {
+        $this->token = $token;
 
         return $this;
     }

@@ -38,17 +38,17 @@ class UserLegalEntity extends User {
     private string $erpId;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user_public")]
+    #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $companyRegNumber;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user_public")]
+    #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $legalRepresentativeName;
 
     #[ORM\Column(type: 'string')]
-    #[Groups("user_public")]
+    #[Groups(['user', 'user_public'])]
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $legalAddress;
 
@@ -87,8 +87,5 @@ class UserLegalEntity extends User {
 
         return $this;
     }
-
-
-
 
 }

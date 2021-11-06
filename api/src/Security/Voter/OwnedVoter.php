@@ -51,8 +51,7 @@ class OwnedVoter extends Voter {
         }
 
         //POST
-        if ($subject instanceof Request) {
-
+        if ($subject instanceof Request && $op == 'post') {
 
             $body = json_decode($subject->getContent(), true);
             if ($body) {
