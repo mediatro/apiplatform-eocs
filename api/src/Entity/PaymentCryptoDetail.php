@@ -30,6 +30,11 @@ class PaymentCryptoDetail extends PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $walletNumber;
 
+    public function getDisplayString(): ?string
+    {
+        return $this->displayString ?: implode(' ', ['CRYPTO', $this->getPlatform(), '****', substr($this->getWalletNumber(),-4)]);
+    }
+
     public function getPlatform(): ?string
     {
         return $this->platform;

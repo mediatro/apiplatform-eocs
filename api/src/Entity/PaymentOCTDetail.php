@@ -33,6 +33,11 @@ class PaymentOCTDetail extends PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $cardExpiry;
 
+    public function getDisplayString(): ?string
+    {
+        return $this->displayString ?: implode(' ', ['OCT', '****', substr($this->getCardNumber(),-4)]);
+    }
+
     public function getCardHolderName(): ?string
     {
         return $this->cardHolderName;

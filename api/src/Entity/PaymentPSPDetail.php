@@ -33,6 +33,11 @@ class PaymentPSPDetail extends PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private ?PaymentPlatform $platform;
 
+    public function getDisplayString(): ?string
+    {
+        return $this->displayString ?: implode(' ', ['PSP', $this->getPlatform()->getCodename(), '****', substr($this->getWalletNumberEmail(),-4)]);
+    }
+
     public function getAccountHolderName(): ?string
     {
         return $this->accountHolderName;

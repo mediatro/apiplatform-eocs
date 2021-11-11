@@ -17,15 +17,16 @@ class PaymentDetailPrePersistListener {
     }
 
     public function prePersist(LifecycleEventArgs $args): void {
+
         $entity = $args->getObject();
 
-        if ($entity instanceof PaymentWireDetail) {
+        /*if ($entity instanceof PaymentWireDetail) {
             $entity->setDisplayString(sprintf('account: %s, swift: %s', $entity->getBeneficiaryBankAccountIban(), $entity->getBeneficiaryBankSwift()));
         }
 
         if ($entity instanceof PaymentCryptoDetail) {
             $entity->setDisplayString(sprintf('platform: %s, wallet: %s', $entity->getPlatform(), $entity->getWalletNumber()));
-        }
+        }*/
 
         if ($entity instanceof PaymentDetail) {
             if($entity->getStatus() == 'new-primary'){

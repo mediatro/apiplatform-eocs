@@ -45,7 +45,10 @@ class PaymentWireDetail extends PaymentDetail {
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or is_granted('CHECK_OWNER', object)")]
     private string $beneficiaryBankSwift;
 
-
+    public function getDisplayString(): ?string
+    {
+        return $this->displayString ?: implode(' ', ['WIRE', $this->getBeneficiaryBankSwift(), '****', substr($this->getBeneficiaryBankAccountIban(),-4)]);
+    }
 
     public function getAccountHolderName(): ?string
     {
